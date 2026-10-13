@@ -1,6 +1,6 @@
-# Skate 64
+# Skating with a Plumber in a Magical Land
 
-Skate 3's skating engine inside Super Mario 64.
+**Skate 64**: Skate 3's skating engine inside Super Mario 64.
 
 This is a mod for [sm64coopdx](https://github.com/coop-deluxe/sm64coopdx) (Super Mario 64 Coop Deluxe). Mario rides the Rust re-implementation of Skate 3's skateboarding engine through the real game: coins, enemies, stars, warps and the rest of Mario 64 keep working around you. Press Y and Mario gets on the board. Press Y again and he's back to his normal moveset.
 
