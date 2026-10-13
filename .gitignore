@@ -18,3 +18,4 @@ tools/vgmstream/
 strings.txt
 *.log
 *.png
+!docs/*.png

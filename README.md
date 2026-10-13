@@ -6,6 +6,8 @@ This is a mod for [sm64coopdx](https://github.com/coop-deluxe/sm64coopdx) (Super
 
 [![Ko-fi](https://img.shields.io/badge/Ko--fi-support%20me-ff5e5b?logo=ko-fi&logoColor=white)](https://ko-fi.com/stewyork91)
 
+![Mario grinding a flat rail placed with the object dropper](docs/grind.png)
+
 > **Version 0.1.0, experimental.** Playable, but tested on one PC. Expect rough edges.
 
 ## Features
