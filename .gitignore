@@ -1,0 +1,20 @@
+# Your private coopdx copy, ROM and saves
+game/
+
+# Build output
+host/target/
+host/.cargo/
+native/*.obj
+native/*.lib
+native/*.exp
+native/*.dll
+
+# Game audio converted from your own Skate 3 (never commit)
+mod/sm64-skate/sound/*.ogg
+tools/.work/
+tools/vgmstream/
+
+# Local scratch
+strings.txt
+*.log
+*.png
