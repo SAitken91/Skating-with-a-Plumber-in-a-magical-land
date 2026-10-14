@@ -8,7 +8,7 @@ This is a mod for [sm64coopdx](https://github.com/coop-deluxe/sm64coopdx) (Super
 
 ![Mario grinding a flat rail placed with the object dropper](docs/grind.png)
 
-> **Version 0.1.0, experimental.** Playable, but tested on one PC. Expect rough edges.
+> **Version 0.1.1, experimental.** Playable, but tested on one PC. Expect rough edges.
 
 ## Features
 

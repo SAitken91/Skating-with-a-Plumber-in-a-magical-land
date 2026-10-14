@@ -1,6 +1,6 @@
 [package]
 name = "sm64-skate-host"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2024"
 [dependencies]
 skate-host = { git = "https://github.com/chasmlol/2010-rust-rewrite-mashup", rev = "f608f85e407ff1b7689d54a9aafdd16e95711ac4" }
