@@ -1,4 +1,4 @@
-use skate_host::bridge::{Session,Controls,ControllerTransport,Pose,PreparedCollision};
+use skate_host::bridge::{Session,Controls,ControllerTransport,InputFrame,Pose,PreparedCollision};
 use skate_host::tuning::TrainerTuning;
 use bevy_math::{Mat3,Mat4,Vec3};
 use std::{ffi::c_void,path::Path,time::{Duration,Instant}};
@@ -119,6 +119,12 @@ impl ScorePublication {
     }}
 }
 fn f(header:&[u32],index:usize)->f32{f32::from_bits(header[index])}
+/// Controller forwarded by the bridge (Y already filtered), words 17..22.
+fn forwarded_pad(header:&[u32])->Option<InputFrame>{
+    if header[17]==0{return None;}
+    let split=|v:u32|[v as u16 as i16,(v>>16) as u16 as i16];
+    Some(InputFrame::from_pad(header[18] as u16,[header[19] as u8,(header[19]>>8) as u8],split(header[20]),split(header[21]),header[22]))
+}
 fn frame_time(header:&[u32])->f64{f64::from_bits(header[14] as u64|((header[15] as u64)<<32))}
 pub fn tuning_from_words(words:&[u32])->TrainerTuning{
     let v=|i:usize|{let x=f32::from_bits(words[i]);if x.is_finite(){x.clamp(0.,10.)}else{1.}};
@@ -239,7 +245,9 @@ pub fn run(root:&Path,pid:u32)->Result<(),String>{
             pad.left[0]=if keys&4!=0{-24000}else if keys&8!=0{24000}else{0};
             if keys&16!=0{pad.right[1]=-32767;}
             if flick_frames>0{pad.right=[if keys&32!=0{-26000}else if keys&64!=0{26000}else{0},32767];}
-            let packet=controller.poll();
+            // Prefer the bridge's copy of the controller: it removes Y, which the
+            // mod uses for getting Mario on and off. Fall back to polling directly.
+            let packet=if h[1]>=1&&h[17]!=0{forwarded_pad(&h).unwrap_or_else(||controller.poll())}else{controller.poll()};
             let use_controller=packet.controller().is_some()&&!ui&&keys==0&&flick_frames==0;
             if use_controller {session.collect(packet,dt);}
             let period=session.period();

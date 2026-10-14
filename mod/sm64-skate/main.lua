@@ -114,6 +114,12 @@ function SK.dismount(m, reason, keepAction)
     if reason then SK.say(reason, 3) end
 end
 
+--- The engine's skater is off the board, walking with it.
+function SK.carrying_board()
+    local p = st.pose
+    return p ~= nil and p.state ~= nil and p.state:find("^Biped") ~= nil
+end
+
 -- ---------------------------------------------------------------- engine exchange (once per frame)
 local function exchange(m)
     SK.flush_geometry()
@@ -130,9 +136,17 @@ local function exchange(m)
     if SK.replay_active() or (SK.dropper_active and SK.dropper_active()) then return end
     local ui = SK.menu_open()
     local s = st.spawn
-    sk_frame(st.desired, st.epoch, s[1], s[2], s[3], s[4], ui, aspect(), st.keyboard)
+    local engineY = (st.engineYFrames or 0) > 0
+    if engineY then st.engineYFrames = st.engineYFrames - 1 end
+    sk_frame(st.desired, st.epoch, s[1], s[2], s[3], s[4], ui, aspect(), st.keyboard, engineY)
     st.pose = sk_pose()
     local p = st.pose
+    -- A session can start with the skater off the board, carrying it (the engine
+    -- keeps that across restarts): tap the engine's own Y once to get back on.
+    if st.desired and valid_pose() and SK.carrying_board() and st.remountedEpoch ~= st.epoch then
+        st.remountedEpoch = st.epoch
+        st.engineYFrames = 4
+    end
     if st.desired and p.status == 3 and p.epoch == st.epoch then
         SK.dismount(m, "Skate engine error: " .. tostring(p.error), false)
     end
@@ -370,7 +384,9 @@ local function before_mario_update(m)
     end
     -- Board on/off: Y (controller) or J (keyboard).
     if SK.pressed(PAD.Y) or SK.key_pressed(VK_J) then
-        if st.desired then SK.dismount(m, nil)
+        if st.desired and valid_pose() and SK.carrying_board() then
+            st.engineYFrames = 4 -- back onto the board (engine's own Y)
+        elseif st.desired then SK.dismount(m, nil)
         elseif SK.can_mount(m) then SK.mount(m)
         else SK.say("Can't get on the board right now.", 2) end
     end

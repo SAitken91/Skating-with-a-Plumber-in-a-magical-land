@@ -174,12 +174,19 @@ static int sk_tuning(lua_State* L){
     for(int i=0;i<14;i++){lua::rawgeti(L,1,i+1);tuning[i]=float(num(L,-1,i>=12?0:1));lua::settop(L,-2);}
     tuningRevision++;tuningDirty=true;return 0;
 }
-// sk_frame(desired, epoch, x, y, z, heading, ui, aspect, keyboard): one exchange per game frame.
+// sk_frame(desired, epoch, x, y, z, heading, ui, aspect, keyboard, engineY): one exchange per game frame.
+// The controller is forwarded to the host here. Y is the engine's own on/off-board
+// button but the mod uses Y for Mario's on/off, so the engine only sees Y when the
+// mod asks for it (engineY), e.g. to get a carrying skater back on the board.
 static int sk_frame(lua_State* L){
     if(!shared){lua::pushboolean(L,0);return 1;}
     bool desired=lua::toboolean(L,1)!=0;uint32_t epoch=uint32_t(integer(L,2));
     float spawn[4]={float(num(L,3)),float(num(L,4)),float(num(L,5)),float(num(L,6))};
     bool ui=lua::toboolean(L,7)!=0;float aspect=float(num(L,8,1.333));bool keyboard=lua::toboolean(L,9)!=0;
+    bool engineY=lua::toboolean(L,10)!=0;
+    XINPUT_STATE pad{};bool padPresent=readPad(pad);
+    if(!focused())pad.Gamepad=XINPUT_GAMEPAD{}; // idle while another window has focus
+    uint16_t padButtons=uint16_t((pad.Gamepad.wButtons&~XINPUT_GAMEPAD_Y)|(engineY?XINPUT_GAMEPAD_Y:0));
     uint32_t keys=0;
     if(desired&&keyboard&&!ui){
         if(keyDown('W'))keys|=1;if(keyDown('S'))keys|=2;if(keyDown('A'))keys|=4;if(keyDown('D'))keys|=8;
@@ -192,6 +199,10 @@ static int sk_frame(lua_State* L){
         memcpy(shared+14,&now,sizeof now);
         for(int i=0;i<4;i++)sf(shared,10+i)=spawn[i];
         sf(shared,23)=aspect;
+        shared[17]=(padPresent||engineY)?1u:0u;shared[18]=padButtons;shared[19]=pad.Gamepad.bLeftTrigger|(pad.Gamepad.bRightTrigger<<8);
+        shared[20]=uint16_t(pad.Gamepad.sThumbLX)|(uint32_t(uint16_t(pad.Gamepad.sThumbLY))<<16);
+        shared[21]=uint16_t(pad.Gamepad.sThumbRX)|(uint32_t(uint16_t(pad.Gamepad.sThumbRY))<<16);
+        shared[22]=pad.dwPacketNumber^(engineY?0x40000000u:0u);
         if(tuningDirty){shared[40]=tuningRevision;memcpy(shared+41,tuning,sizeof tuning);tuningDirty=false;}
         if(sendGeometry){
             shared[1599]=0;shared[5]=geometryRevision;shared[6]=uint32_t(geometry.size()/9);
